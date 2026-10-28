@@ -1,0 +1,4 @@
+# One target per line. IP, short name or FQDN. Lines starting with # are ignored.
+sql01.contoso.local
+fs01.contoso.local
+10.0.10.8
