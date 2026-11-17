@@ -25,6 +25,8 @@ Common error codes (`0x800706BA`, `0x80070005`, `0x80041003`, `0x800706BE`, `0x8
 
 Run it **from the same machine, and as the same account (or with the same credential), that will run LiveOptics.exe.**
 
+Don't run it on the server you're checking. A server testing itself never crosses the network or firewall, so it can pass even when the collector can't connect. The script warns when this happens.
+
 ```powershell
 # Easiest: run with no arguments. It asks for the server(s) and, optionally, a different account.
 .\Test-LiveOpticsTarget.ps1

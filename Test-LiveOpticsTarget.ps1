@@ -77,6 +77,14 @@ begin {
     $results = [System.Collections.Generic.List[object]]::new()
     $useCred = $Credential -ne [System.Management.Automation.PSCredential]::Empty
 
+    # Addresses of the machine running the script, to spot a server testing itself.
+    $localIPs = @('127.0.0.1', '::1')
+    try {
+        $localIPs += [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces() |
+            ForEach-Object { $_.GetIPProperties().UnicastAddresses } | ForEach-Object { $_.Address.IPAddressToString }
+    }
+    catch { }
+
     function Write-Check {
         param([string]$Name, [ValidateSet('PASS', 'WARN', 'FAIL', 'INFO', 'SKIP')][string]$Status, [string]$Detail)
         $color = @{ PASS = 'Green'; WARN = 'Yellow'; FAIL = 'Red'; INFO = 'Cyan'; SKIP = 'DarkGray' }[$Status]
@@ -241,6 +249,14 @@ end {
                 $results.Add([pscustomobject]$r)
                 continue
             }
+        }
+
+        # ---- Local machine check ---------------------------------------------
+        $shortName = ($r.ResolvedName -split '\.')[0]
+        if (($r.ResolvedIP -and $localIPs -contains $r.ResolvedIP) -or
+            ($env:COMPUTERNAME -and $shortName -eq $env:COMPUTERNAME)) {
+            Write-Check 'Local machine' 'WARN' 'Target is the machine running this script. This does NOT test the network or firewall path.'
+            $warnings.Add('Target is this machine. Run the script from the Live Optics collector machine to test the real network path.')
         }
 
         # ---- 2. Ping (informational) -----------------------------------------
