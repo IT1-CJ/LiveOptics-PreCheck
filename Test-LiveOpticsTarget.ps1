@@ -21,7 +21,9 @@
     and suggests the FQDN when reverse DNS finds one.
 
 .PARAMETER ComputerName
-    One or more targets (IP, short name or FQDN).
+    One or more targets (IP, short name or FQDN). If you leave this out, the script
+    asks for the servers once (separate several with commas) and offers to use a
+    different account.
 
 .PARAMETER InputFile
     Text or CSV file of targets. Text: one per line. CSV: needs a ComputerName column.
@@ -37,6 +39,10 @@
     Optional path to save the results as CSV.
 
 .EXAMPLE
+    .\Test-LiveOpticsTarget.ps1
+    Asks for the server(s) to check and, optionally, a different account.
+
+.EXAMPLE
     .\Test-LiveOpticsTarget.ps1 -ComputerName 10.0.10.8
 
 .EXAMPLE
@@ -47,7 +53,7 @@
 #>
 [CmdletBinding(DefaultParameterSetName = 'Names')]
 param(
-    [Parameter(ParameterSetName = 'Names', Mandatory, Position = 0, ValueFromPipeline)]
+    [Parameter(ParameterSetName = 'Names', Position = 0, ValueFromPipeline)]
     [string[]]$ComputerName,
 
     [Parameter(ParameterSetName = 'File', Mandatory)]
@@ -146,6 +152,26 @@ end {
         }
         else {
             Get-Content $InputFile | Where-Object { $_ -and $_ -notmatch '^\s*#' } | ForEach-Object { $targets.Add($_.Trim()) }
+        }
+    }
+
+    # No targets given: ask once in plain words instead of PowerShell's ComputerName[0]: prompt.
+    if ($targets.Count -eq 0 -and $PSCmdlet.ParameterSetName -eq 'Names') {
+        Write-Host ''
+        Write-Host 'Enter the server(s) to check. Use an IP address or FQDN.' -ForegroundColor White
+        Write-Host 'Separate several with commas, e.g.  sql01.contoso.local, 10.0.10.8' -ForegroundColor DarkGray
+        while ($targets.Count -eq 0) {
+            $answer = Read-Host 'Server(s)'
+            $answer -split '[,;\s]+' | Where-Object { $_ } | ForEach-Object { $targets.Add($_.Trim()) }
+            if ($targets.Count -eq 0) { Write-Host 'Please enter at least one server name or IP.' -ForegroundColor Yellow }
+        }
+
+        if (-not $useCred) {
+            $alt = Read-Host "Test as a different account than $env:USERDOMAIN\$env:USERNAME? (y/N)"
+            if ($alt -match '^(y|yes)$') {
+                $Credential = Get-Credential -Message 'Account the Live Optics collector will use (DOMAIN\user)'
+                $useCred = $null -ne $Credential
+            }
         }
     }
 

@@ -26,6 +26,9 @@ Common error codes (`0x800706BA`, `0x80070005`, `0x80041003`, `0x800706BE`, `0x8
 Run it **from the same machine, and as the same account (or with the same credential), that will run LiveOptics.exe.**
 
 ```powershell
+# Easiest: run with no arguments. It asks for the server(s) and, optionally, a different account.
+.\Test-LiveOpticsTarget.ps1
+
 # Single target by IP or FQDN
 .\Test-LiveOpticsTarget.ps1 -ComputerName 10.0.10.8
 .\Test-LiveOpticsTarget.ps1 -ComputerName sql01.contoso.local -Credential (Get-Credential)
@@ -49,7 +52,7 @@ powershell.exe -ExecutionPolicy Bypass -File .\Test-LiveOpticsTarget.ps1 -Comput
 
 | Parameter | Description |
 |-----------|-------------|
-| `-ComputerName` | One or more targets (IP, short name or FQDN). Comma-separated works too. |
+| `-ComputerName` | One or more targets (IP, short name or FQDN). Comma-separated works too. Leave it out to be asked. |
 | `-InputFile` | Text or CSV file of targets. |
 | `-Credential` | Account to test with. Defaults to the current logon. |
 | `-TimeoutMs` | TCP connect timeout. Default `2000`. |
